@@ -9,7 +9,9 @@ Technically the project uses the [Operator SDK](https://sdk.operatorframework.io
 There isn't much documentation yet, but I've planned to blog about different parts over the next days.
 
 * [Developing and Debugging Kubernetes Operators in Java](http://heidloff.net/article/developing-debugging-kubernetes-operators-java/)
-* [Accessing Kubernetes Resources from Java Operators]((http://heidloff.net/article/accessing-kubernetes-resources-from-java-operators/))
+* [Accessing Kubernetes Resources from Java Operators](http://heidloff.net/article/accessing-kubernetes-resources-from-java-operators/)
+* [Leveraging third party Operators in Kubernetes Operators](http://heidloff.net/article/leveraging-third-party-operators-in-kubernetes-operators/)
+
 
 ## Setup
 
