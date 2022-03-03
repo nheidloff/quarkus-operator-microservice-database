@@ -1,0 +1,17 @@
+apiVersion: ibmcloud.ibm.com/v1
+kind: Service
+metadata:
+  name: ecommercesample
+  namespace: tenant-a
+spec:
+  plan: standard
+  serviceClass: databases-for-postgresql
+---
+apiVersion: ibmcloud.ibm.com/v1
+kind: Binding
+metadata:
+  name: binding-ecommercesample
+  namespace: tenant-a
+spec:
+  serviceName: ecommercesample
+  secretName: ecommercesample-secret

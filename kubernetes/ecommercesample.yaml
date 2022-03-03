@@ -1,0 +1,8 @@
+apiVersion: "ecommercesample.com/v1alpha1"
+kind: ECommerceSample
+metadata:
+  name: ecommercesample1
+  namespace: tenant1
+spec:
+  sqlUrl: https://raw.githubusercontent.com/IBM/multi-tenancy/main/installapp/postgres-config/create-populate-tenant-a.sql
+  appTitle: Movies
