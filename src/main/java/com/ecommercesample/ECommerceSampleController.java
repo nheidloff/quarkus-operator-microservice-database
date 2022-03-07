@@ -1,14 +1,22 @@
 package com.ecommercesample;
 
+import java.io.InputStream;
 import java.io.StringReader;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonReader;
+
+import java.net.*;
+import java.io.*;
+
 import javax.json.JsonObject;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -124,6 +132,8 @@ public class ECommerceSampleController implements ResourceController<ECommerceSa
         String postgresPassword = null;
         String postgresCertificateData = null;
         String postgresUrl = null;
+        String postgresHostname;
+        int postgresPort;
         try {  
             Map<String, String> postgresStringDataMap = secret.getData();
             String postgresConnectionJSON = postgresStringDataMap.get("connection");
@@ -141,8 +151,8 @@ public class ECommerceSampleController implements ResourceController<ECommerceSa
             postgresCertificateData = certificateObject.getString("certificate_base64");
             decodedBytes = Base64.getDecoder().decode(postgresCertificateData);
             postgresCertificateData = new String(decodedBytes);
-            String postgresHostname = hostsObject.getJsonObject(0).getString("hostname");
-            int postgresPort = hostsObject.getJsonObject(0).getInt("port");
+            postgresHostname = hostsObject.getJsonObject(0).getString("hostname");
+            postgresPort = hostsObject.getJsonObject(0).getInt("port");
             String postgresDatabase = postgresObject.getString("database");            
             postgresUrl = "jdbc:postgresql://" + postgresHostname + ":" + postgresPort + "/" + postgresDatabase + "?sslmode=verify-full&sslrootcert=/cloud-postgres-cert";
             
@@ -154,6 +164,27 @@ public class ECommerceSampleController implements ResourceController<ECommerceSa
         }
         } catch (Exception e) {
             return UpdateControl.updateCustomResource(resource);
+        }
+
+        if (resource.getSpec().getSqlUrl().isEmpty()) {
+            System.err.println("Fatal error. sqlUrl not defined");
+            return UpdateControl.noUpdate(); 
+        }
+        else {
+            String sql = "";
+            try {
+                sql = readSQL(resource.getSpec().getSqlUrl());
+                
+                String postgresUrlJdbc = "jdbc:postgresql://" + postgresHostname + ":" + postgresPort + "/ibmclouddb";
+                Connection connection = DriverManager.getConnection(postgresUrlJdbc, postgresUserName, postgresPassword);            
+
+                if (isSchemaDeployed(connection) == false) {
+                    PreparedStatement selectStatement = connection.prepareStatement(sql);
+                    selectStatement.execute();
+                }                            
+            } catch (Exception e) {
+                return UpdateControl.updateCustomResource(resource);
+            }
         }
         
         try {
@@ -345,5 +376,37 @@ public class ECommerceSampleController implements ResourceController<ECommerceSa
 
         return UpdateControl.noUpdate();
     }
-}
 
+    private boolean isSchemaDeployed(Connection connection) {
+        boolean output = false;
+        String requiredTable = "category";
+        DatabaseMetaData databaseMetaData;
+        try {
+            databaseMetaData = connection.getMetaData();
+            ResultSet resultSet = databaseMetaData.getTables(null, null, null, new String[] {"TABLE"});
+
+            while (resultSet.next()) {
+                String name = resultSet.getString("TABLE_NAME");
+                System.out.print(name);
+                //String schema = resultSet.getString("TABLE_SCHEM");
+                if (name.equals(requiredTable)) output = true;
+            }
+            
+        } catch (SQLException e) {
+            System.out.println("Error accessing database");
+        }
+        System.out.println(output);
+        return output;
+    }
+    private String readSQL(String urlAsString) throws Exception {
+        URL url = new URL(urlAsString);
+        URLConnection connection = url.openConnection();
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = bufferedReader.readLine()) != null) 
+            response.append(line);
+            bufferedReader.close();
+        return response.toString();
+    }
+}
