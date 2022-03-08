@@ -11,6 +11,7 @@ There isn't much documentation yet, but I've planned to blog about different par
 * [Developing and Debugging Kubernetes Operators in Java](http://heidloff.net/article/developing-debugging-kubernetes-operators-java/)
 * [Accessing Kubernetes Resources from Java Operators](http://heidloff.net/article/accessing-kubernetes-resources-from-java-operators/)
 * [Leveraging third party Operators in Kubernetes Operators](http://heidloff.net/article/leveraging-third-party-operators-in-kubernetes-operators/)
+* [Creating Database Schemas in Kubernetes Operators](http://heidloff.net/article/creating-database-schemas-kubernetes-operators/)
 
 
 ## Setup
